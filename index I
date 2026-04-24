@@ -1,0 +1,68 @@
+import React, { useEffect, useState } from "react";
+import { View, Text, TouchableOpacity, StyleSheet, ScrollView } from "react-native";
+import { auth, db } from "../../firebaseConfig";
+import { doc, getDoc, getDocs, collection } from "firebase/firestore";
+
+export default function InsightsScreen() {
+  const user = auth.currentUser;
+
+  const [insight, setInsight] = useState("");
+  const [settings, setSettings] = useState<any>({});
+  const [goals, setGoals] = useState<any[]>([]);
+
+  useEffect(() => {
+    const load = async () => {
+      if (!user) return;
+
+      const sRef = doc(db, "users", user.email!, "meta", "settings");
+      const sSnap = await getDoc(sRef);
+      if (sSnap.exists()) setSettings(sSnap.data());
+
+      const gRef = collection(db, "users", user.email!, "goals");
+      const gSnap = await getDocs(gRef);
+      setGoals(gSnap.docs.map((d) => d.data()));
+    };
+    load();
+  }, []);
+
+  const generate = () => {
+    const income = settings.income ?? 0;
+    const expenses = settings.expenses ?? 0;
+    const savings = settings.savings_budget ?? 0;
+
+    const totalTarget = goals.reduce((a, g) => a + g.target, 0);
+    const totalSaved = goals.reduce((a, g) => a + g.saved, 0);
+
+    const disposable = income - expenses;
+
+    const text = `
+Your disposable income is $${disposable}.
+Your savings budget is $${savings}.
+You have saved $${totalSaved} toward $${totalTarget} in goals.
+
+You are moving steadily. A small increase in savings or a slight reduction in friction spending would accelerate your timeline without sacrificing comfort.
+    `.trim();
+
+    setInsight(text);
+  };
+
+  return (
+    <ScrollView style={styles.container}>
+      <Text style={styles.title}>Insights</Text>
+
+      <TouchableOpacity style={styles.button} onPress={generate}>
+        <Text style={styles.buttonText}>Generate Insight</Text>
+      </TouchableOpacity>
+
+      {insight ? <Text style={styles.insight}>{insight}</Text> : null}
+    </ScrollView>
+  );
+}
+
+const styles = StyleSheet.create({
+  container: { flex: 1, backgroundColor: "#050706", padding: 20, paddingTop: 60 },
+  title: { color: "#E8F3EF", fontSize: 28, marginBottom: 24 },
+  button: { backgroundColor: "#1A2E26", padding: 14, borderRadius: 999, alignItems: "center", marginBottom: 20 },
+  buttonText: { color: "#B4E8D1", fontWeight: "600" },
+  insight: { color: "#E8F3EF", marginTop: 20, lineHeight: 22 }
+});
