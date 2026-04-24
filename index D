@@ -1,0 +1,67 @@
+import React, { useEffect, useState } from "react";
+import { NavigationContainer } from "@react-navigation/native";
+import { createNativeStackNavigator } from "@react-navigation/native-stack";
+import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
+import { onAuthStateChanged, User } from "firebase/auth";
+import { ActivityIndicator, View } from "react-native";
+import { auth } from "./firebaseConfig";
+
+import LoginScreen from "./src/screens/LoginScreen";
+import HomeScreen from "./src/screens/HomeScreen";
+import BudgetScreen from "./src/screens/BudgetScreen";
+import GoalsScreen from "./src/screens/GoalsScreen";
+import InsightsScreen from "./src/screens/InsightsScreen";
+import ProfileScreen from "./src/screens/ProfileScreen";
+import SanctuaryScreen from "./src/screens/SanctuaryScreen";
+
+const Stack = createNativeStackNavigator();
+const Tab = createBottomTabNavigator();
+
+function Tabs() {
+  return (
+    <Tab.Navigator
+      screenOptions={{
+        headerShown: false,
+        tabBarStyle: { backgroundColor: "#050706", borderTopColor: "#1A2E26" },
+        tabBarActiveTintColor: "#B4E8D1",
+        tabBarInactiveTintColor: "#6B7C75"
+      }}
+    >
+      <Tab.Screen name="Home" component={HomeScreen} />
+      <Tab.Screen name="Budget" component={BudgetScreen} />
+      <Tab.Screen name="Goals" component={GoalsScreen} />
+      <Tab.Screen name="Insights" component={InsightsScreen} />
+      <Tab.Screen name="Sanctuary" component={SanctuaryScreen} />
+      <Tab.Screen name="Profile" component={ProfileScreen} />
+    </Tab.Navigator>
+  );
+}
+
+export default function App() {
+  const [user, setUser] = useState<User | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const unsub = onAuthStateChanged(auth, (u) => {
+      setUser(u);
+      setLoading(false);
+    });
+    return () => unsub();
+  }, []);
+
+  if (loading) {
+    return (
+      <View style={{ flex: 1, backgroundColor: "#050706", justifyContent: "center", alignItems: "center" }}>
+        <ActivityIndicator color="#B4E8D1" />
+      </View>
+    );
+  }
+
+  return (
+    <NavigationContainer>
+      <Stack.Navigator screenOptions={{ headerShown: false }}>
+        {user ? <Stack.Screen name="Main" component={Tabs} /> : <Stack.Screen name="Login" component={LoginScreen} />}
+      </Stack.Navigator>
+    </NavigationContainer>
+  );
+}
