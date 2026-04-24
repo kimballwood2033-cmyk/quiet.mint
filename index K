@@ -1,0 +1,29 @@
+import React from "react";
+import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
+import { auth } from "../../firebaseConfig";
+
+export default function ProfileScreen() {
+  const user = auth.currentUser;
+
+  return (
+    <View style={styles.container}>
+      <Text style={styles.title}>Profile</Text>
+
+      <Text style={styles.label}>Email</Text>
+      <Text style={styles.value}>{user?.email}</Text>
+
+      <TouchableOpacity style={styles.button} onPress={() => auth.signOut()}>
+        <Text style={styles.buttonText}>Sign Out</Text>
+      </TouchableOpacity>
+    </View>
+  );
+}
+
+const styles = StyleSheet.create({
+  container: { flex: 1, backgroundColor: "#050706", padding: 20, paddingTop: 60 },
+  title: { color: "#E8F3EF", fontSize: 28, marginBottom: 24 },
+  label: { color: "#6B7C75", marginBottom: 4 },
+  value: { color: "#E8F3EF", marginBottom: 20 },
+  button: { backgroundColor: "#1A2E26", padding: 14, borderRadius: 999, alignItems: "center", marginTop: 8 },
+  buttonText: { color: "#B4E8D1", fontWeight: "600" }
+});
