@@ -1,0 +1,109 @@
+import React, { useEffect, useState } from "react";
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, ScrollView } from "react-native";
+import { auth, db } from "../../firebaseConfig";
+import { doc, getDoc, setDoc } from "firebase/firestore";
+
+export default function BudgetScreen() {
+  const user = auth.currentUser;
+
+  const [balance, setBalance] = useState("");
+  const [income, setIncome] = useState("");
+  const [expenses, setExpenses] = useState("");
+  const [savings, setSavings] = useState("");
+  const [saved, setSaved] = useState(false);
+
+  useEffect(() => {
+    const load = async () => {
+      if (!user) return;
+      const ref = doc(db, "users", user.email!, "meta", "settings");
+      const snap = await getDoc(ref);
+      if (snap.exists()) {
+        const s = snap.data();
+        setBalance(String(s.balance ?? ""));
+        setIncome(String(s.income ?? ""));
+        setExpenses(String(s.expenses ?? ""));
+        setSavings(String(s.savings_budget ?? ""));
+      }
+    };
+    load();
+  }, []);
+
+  const save = async () => {
+    if (!user) return;
+    const ref = doc(db, "users", user.email!, "meta", "settings");
+    await setDoc(
+      ref,
+      {
+        balance: Number(balance),
+        income: Number(income),
+        expenses: Number(expenses),
+        savings_budget: Number(savings)
+      },
+      { merge: true }
+    );
+    setSaved(true);
+    setTimeout(() => setSaved(false), 2000);
+  };
+
+  return (
+    <ScrollView style={styles.container}>
+      <Text style={styles.title}>Budget</Text>
+
+      <TextInput
+        style={styles.input}
+        placeholder="Current Balance"
+        placeholderTextColor="#6B7C75"
+        value={balance}
+        onChangeText={setBalance}
+        keyboardType="numeric"
+      />
+      <TextInput
+        style={styles.input}
+        placeholder="Monthly Income"
+        placeholderTextColor="#6B7C75"
+        value={income}
+        onChangeText={setIncome}
+        keyboardType="numeric"
+      />
+      <TextInput
+        style={styles.input}
+        placeholder="Monthly Expenses"
+        placeholderTextColor="#6B7C75"
+        value={expenses}
+        onChangeText={setExpenses}
+        keyboardType="numeric"
+      />
+      <TextInput
+        style={styles.input}
+        placeholder="Savings Budget"
+        placeholderTextColor="#6B7C75"
+        value={savings}
+        onChangeText={setSavings}
+        keyboardType="numeric"
+      />
+
+      <TouchableOpacity style={styles.button} onPress={save}>
+        <Text style={styles.buttonText}>Save</Text>
+      </TouchableOpacity>
+
+      {saved && <Text style={styles.saved}>Saved ✓</Text>}
+    </ScrollView>
+  );
+}
+
+const styles = StyleSheet.create({
+  container: { flex: 1, backgroundColor: "#050706", padding: 20, paddingTop: 60 },
+  title: { color: "#E8F3EF", fontSize: 28, marginBottom: 24 },
+  input: {
+    backgroundColor: "#0D1612",
+    borderRadius: 16,
+    padding: 14,
+    color: "#E8F3EF",
+    marginBottom: 12,
+    borderWidth: 1,
+    borderColor: "#1A2E26"
+  },
+  button: { backgroundColor: "#1A2E26", padding: 14, borderRadius: 999, alignItems: "center", marginTop: 8 },
+  buttonText: { color: "#B4E8D1", fontWeight: "600" },
+  saved: { color: "#B4E8D1", textAlign: "center", marginTop: 12 }
+});
