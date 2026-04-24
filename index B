@@ -1,0 +1,23 @@
+{
+  "expo": {
+    "name": "Quiet Mint",
+    "slug": "quiet-mint",
+    "icon": "./assets/icon.png",
+    "splash": {
+      "image": "./assets/splash.png",
+      "resizeMode": "cover",
+      "backgroundColor": "#050706"
+    },
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.quietmint.app"
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/icon.png",
+        "backgroundColor": "#050706"
+      },
+      "package": "com.quietmint.app"
+    }
+  }
+}
