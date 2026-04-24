@@ -1,0 +1,120 @@
+import React, { useEffect, useState } from "react";
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, ScrollView } from "react-native";
+import { auth, db } from "../../firebaseConfig";
+import { collection, addDoc, getDocs, deleteDoc, doc } from "firebase/firestore";
+
+export default function GoalsScreen() {
+  const user = auth.currentUser;
+
+  const [name, setName] = useState("");
+  const [target, setTarget] = useState("");
+  const [saved, setSaved] = useState("");
+  const [goals, setGoals] = useState<any[]>([]);
+
+  const loadGoals = async () => {
+    if (!user) return;
+    const ref = collection(db, "users", user.email!, "goals");
+    const snap = await getDocs(ref);
+    setGoals(snap.docs.map((d) => ({ id: d.id, ...d.data() })));
+  };
+
+  useEffect(() => {
+    loadGoals();
+  }, []);
+
+  const addGoal = async () => {
+    if (!user || !name || !target) return;
+    const ref = collection(db, "users", user.email!, "goals");
+    await addDoc(ref, {
+      name,
+      target: Number(target),
+      saved: Number(saved)
+    });
+    setName("");
+    setTarget("");
+    setSaved("");
+    loadGoals();
+  };
+
+  const removeGoal = async (id: string) => {
+    if (!user) return;
+    await deleteDoc(doc(db, "users", user.email!, "goals", id));
+    loadGoals();
+  };
+
+  return (
+    <ScrollView style={styles.container}>
+      <Text style={styles.title}>Goals</Text>
+
+      <TextInput
+        style={styles.input}
+        placeholder="Goal name"
+        placeholderTextColor="#6B7C75"
+        value={name}
+        onChangeText={setName}
+      />
+      <TextInput
+        style={styles.input}
+        placeholder="Target amount"
+        placeholderTextColor="#6B7C75"
+        value={target}
+        onChangeText={setTarget}
+        keyboardType="numeric"
+      />
+      <TextInput
+        style={styles.input}
+        placeholder="Already saved"
+        placeholderTextColor="#6B7C75"
+        value={saved}
+        onChangeText={setSaved}
+        keyboardType="numeric"
+      />
+
+      <TouchableOpacity style={styles.button} onPress={addGoal}>
+        <Text style={styles.buttonText}>Add Goal</Text>
+      </TouchableOpacity>
+
+      <View style={{ height: 20 }} />
+
+      {goals.map((g) => (
+        <View key={g.id} style={styles.goalCard}>
+          <Text style={styles.goalName}>{g.name}</Text>
+          <Text style={styles.goalProgress}>
+            ${g.saved} / ${g.target}
+          </Text>
+
+          <TouchableOpacity onPress={() => removeGoal(g.id)}>
+            <Text style={styles.delete}>Delete</Text>
+          </TouchableOpacity>
+        </View>
+      ))}
+    </ScrollView>
+  );
+}
+
+const styles = StyleSheet.create({
+  container: { flex: 1, backgroundColor: "#050706", padding: 20, paddingTop: 60 },
+  title: { color: "#E8F3EF", fontSize: 28, marginBottom: 24 },
+  input: {
+    backgroundColor: "#0D1612",
+    borderRadius: 16,
+    padding: 14,
+    color: "#E8F3EF",
+    marginBottom: 12,
+    borderWidth: 1,
+    borderColor: "#1A2E26"
+  },
+  button: { backgroundColor: "#1A2E26", padding: 14, borderRadius: 999, alignItems: "center", marginTop: 8 },
+  buttonText: { color: "#B4E8D1", fontWeight: "600" },
+  goalCard: {
+    backgroundColor: "#1A2E26",
+    padding: 20,
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: "#2D4F44",
+    marginBottom: 16
+  },
+  goalName: { color: "#E8F3EF", fontSize: 18, marginBottom: 4 },
+  goalProgress: { color: "#6B7C75", marginBottom: 8 },
+  delete: { color: "#FF6B6B" }
+});
