@@ -1,0 +1,66 @@
+import React, { useEffect, useState } from "react";
+import { View, Text, StyleSheet, ScrollView } from "react-native";
+import { doc, getDoc } from "firebase/firestore";
+import { auth, db } from "../../firebaseConfig";
+
+export default function HomeScreen() {
+  const user = auth.currentUser;
+  const [balance, setBalance] = useState(1200);
+  const [income, setIncome] = useState(4000);
+  const [expenses, setExpenses] = useState(2500);
+  const [savingsBudget, setSavingsBudget] = useState(500);
+
+  useEffect(() => {
+    const load = async () => {
+      if (!user) return;
+      const ref = doc(db, "users", user.email!, "meta", "settings");
+      const snap = await getDoc(ref);
+      if (snap.exists()) {
+        const s = snap.data();
+        setBalance(s.balance ?? balance);
+        setIncome(s.income ?? income);
+        setExpenses(s.expenses ?? expenses);
+        setSavingsBudget(s.savings_budget ?? savingsBudget);
+      }
+    };
+    load();
+  }, []);
+
+  const disposable = income - expenses;
+  const safeDaily = Math.max((disposable - savingsBudget) / 30, 0);
+
+  return (
+    <ScrollView style={styles.container}>
+      <Text style={styles.greeting}>Welcome back, {user?.email}</Text>
+
+      <View style={styles.card}>
+        <Text style={styles.cardLabel}>STRATEGIC INSIGHT</Text>
+        <Text style={styles.cardText}>
+          “Your plan is quietly protecting your future while still honoring the present.”
+        </Text>
+      </View>
+
+      <Text style={styles.safeLabel}>SAFE TO SPEND TODAY</Text>
+      <Text style={styles.hero}>${safeDaily.toFixed(2)}</Text>
+      <Text style={styles.subtle}>Disposable: ${disposable} • Savings: ${savingsBudget}</Text>
+    </ScrollView>
+  );
+}
+
+const styles = StyleSheet.create({
+  container: { flex: 1, backgroundColor: "#050706", padding: 20, paddingTop: 60 },
+  greeting: { color: "#E8F3EF", fontSize: 20, marginBottom: 20 },
+  card: {
+    backgroundColor: "#1A2E26",
+    padding: 20,
+    borderRadius: 28,
+    borderWidth: 1,
+    borderColor: "#2D4F44",
+    marginBottom: 24
+  },
+  cardLabel: { color: "#6B7C75", fontSize: 10, letterSpacing: 2, marginBottom: 8 },
+  cardText: { color: "#E8F3EF", fontSize: 16, lineHeight: 22 },
+  safeLabel: { color: "#6B7C75", textAlign: "center", marginBottom: 4 },
+  hero: { color: "#B4E8D1", fontSize: 56, textAlign: "center", fontStyle: "italic" },
+  subtle: { color: "#6B7C75", textAlign: "center", marginTop: 8 }
+});
