@@ -1,0 +1,79 @@
+import React, { useState } from "react";
+import { View, Text, TextInput, TouchableOpacity, StyleSheet } from "react-native";
+import { signInWithEmailAndPassword, createUserWithEmailAndPassword } from "firebase/auth";
+import { auth } from "../../firebaseConfig";
+
+export default function LoginScreen() {
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [mode, setMode] = useState<"login" | "signup">("login");
+  const [error, setError] = useState("");
+
+  const submit = async () => {
+    setError("");
+    try {
+      if (mode === "login") {
+        await signInWithEmailAndPassword(auth, email.trim(), password);
+      } else {
+        await createUserWithEmailAndPassword(auth, email.trim(), password);
+      }
+    } catch (e: any) {
+      setError(e.message);
+    }
+  };
+
+  return (
+    <View style={styles.container}>
+      <Text style={styles.title}>Quiet Mint</Text>
+      <Text style={styles.subtitle}>Your financial sanctuary</Text>
+
+      <TextInput
+        style={styles.input}
+        placeholder="Email"
+        placeholderTextColor="#6B7C75"
+        value={email}
+        onChangeText={setEmail}
+        autoCapitalize="none"
+      />
+      <TextInput
+        style={styles.input}
+        placeholder="Password"
+        placeholderTextColor="#6B7C75"
+        secureTextEntry
+        value={password}
+        onChangeText={setPassword}
+      />
+
+      {error ? <Text style={styles.error}>{error}</Text> : null}
+
+      <TouchableOpacity style={styles.button} onPress={submit}>
+        <Text style={styles.buttonText}>{mode === "login" ? "Sign In" : "Create Account"}</Text>
+      </TouchableOpacity>
+
+      <TouchableOpacity onPress={() => setMode(mode === "login" ? "signup" : "login")}>
+        <Text style={styles.switch}>
+          {mode === "login" ? "Need an account? Sign up" : "Already have an account? Log in"}
+        </Text>
+      </TouchableOpacity>
+    </View>
+  );
+}
+
+const styles = StyleSheet.create({
+  container: { flex: 1, backgroundColor: "#050706", justifyContent: "center", padding: 24 },
+  title: { color: "#E8F3EF", fontSize: 32, textAlign: "center", marginBottom: 8 },
+  subtitle: { color: "#6B7C75", textAlign: "center", marginBottom: 32 },
+  input: {
+    backgroundColor: "#0D1612",
+    borderRadius: 16,
+    padding: 14,
+    color: "#E8F3EF",
+    marginBottom: 12,
+    borderWidth: 1,
+    borderColor: "#1A2E26"
+  },
+  button: { backgroundColor: "#1A2E26", padding: 14, borderRadius: 999, alignItems: "center", marginTop: 8 },
+  buttonText: { color: "#B4E8D1", fontWeight: "600" },
+  switch: { color: "#6B7C75", textAlign: "center", marginTop: 16 },
+  error: { color: "#FF6B6B", textAlign: "center", marginBottom: 8 }
+});
